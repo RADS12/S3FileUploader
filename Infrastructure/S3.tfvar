@@ -1,6 +1,6 @@
-############################
-# API infra (EC2/ECS app)  #
-############################
+############################################################
+# One-file IaC: S3 + IAM + ECR + ECS Fargate + ALB + Build #
+############################################################
 
 terraform {
   required_version = ">= 1.6.0"
@@ -15,22 +15,17 @@ terraform {
 ################
 # Variables
 ################
-variable "region" {
-  description = "AWS region"
-  type        = string
-  default     = "us-east-2"
-}
-
-variable "bucket_name" {
-  description = "Globally-unique S3 bucket name for uploads"
-  type        = string
-  default     = "rad-s3-demo-first-1"
-}
+variable "region"        { type = string  default = "us-east-2" }
+variable "bucket_name"   { type = string  default = "rad-s3-demo-first-1" } # must be globally unique
+variable "repo_name"     { type = string  default = "file-uploader-api" }
+variable "image_tag"     { type = string  default = "dev" }                 # set per build (e.g., commit SHA)
+variable "docker_context"{ type = string  default = "." }                   # path to your API project (Docker build context)
+variable "dockerfile"    { type = string  default = "Dockerfile" }
+variable "docker_platform"{ type = string default = "linux/amd64" }
 
 variable "tags" {
-  description = "Common tags"
-  type        = map(string)
-  default     = {
+  type = map(string)
+  default = {
     Project = "file-uploader-api"
     Owner   = "rad"
     Env     = "dev"
@@ -42,14 +37,22 @@ provider "aws" {
 }
 
 ################
-# S3 bucket
+# Data sources
+################
+data "aws_caller_identity" "me" {}
+data "aws_vpc" "default" { default = true }
+data "aws_subnets" "default" {
+  filter { name = "vpc-id" values = [data.aws_vpc.default.id] }
+}
+
+################
+# S3 bucket for uploads
 ################
 resource "aws_s3_bucket" "uploads" {
   bucket = var.bucket_name
   tags   = var.tags
 }
 
-# Block all public access (recommended)
 resource "aws_s3_bucket_public_access_block" "uploads" {
   bucket                  = aws_s3_bucket.uploads.id
   block_public_acls       = true
@@ -59,49 +62,34 @@ resource "aws_s3_bucket_public_access_block" "uploads" {
 }
 
 ################
-# IAM for API compute (EC2 or ECS task)
+# IAM role for app (task role): S3 RW
 ################
-
-# Trust EC2 *and* ECS tasks (use whichever you deploy)
 data "aws_iam_policy_document" "assume_role" {
   statement {
     effect = "Allow"
-    principals {
-      type        = "Service"
-      identifiers = ["ec2.amazonaws.com", "ecs-tasks.amazonaws.com"]
-    }
+    principals { type = "Service", identifiers = ["ecs-tasks.amazonaws.com"] }
     actions = ["sts:AssumeRole"]
   }
 }
 
-resource "aws_iam_role" "api_role" {
+resource "aws_iam_role" "api_task_role" {
   name               = "FileUploaderApiRole"
   assume_role_policy = data.aws_iam_policy_document.assume_role.json
   tags               = var.tags
 }
 
-# S3 access: Put/Get/Delete objects in this bucket + List at bucket level
 data "aws_iam_policy_document" "s3_rw" {
   statement {
     sid     = "ListBucket"
     effect  = "Allow"
     actions = ["s3:ListBucket"]
-    resources = [
-      aws_s3_bucket.uploads.arn
-    ]
+    resources = [aws_s3_bucket.uploads.arn]
   }
-
   statement {
     sid     = "ObjectRW"
     effect  = "Allow"
-    actions = [
-      "s3:GetObject",
-      "s3:PutObject",
-      "s3:DeleteObject"
-    ]
-    resources = [
-      "${aws_s3_bucket.uploads.arn}/*"
-    ]
+    actions = ["s3:GetObject", "s3:PutObject", "s3:DeleteObject"]
+    resources = ["${aws_s3_bucket.uploads.arn}/*"]
   }
 }
 
@@ -112,34 +100,254 @@ resource "aws_iam_policy" "s3_rw" {
 }
 
 resource "aws_iam_role_policy_attachment" "attach_s3_rw" {
-  role       = aws_iam_role.api_role.name
+  role       = aws_iam_role.api_task_role.name
   policy_arn = aws_iam_policy.s3_rw.arn
 }
 
 ################
-# (Optional) EC2 instance profile (use if deploying on EC2)
+# ECR repo
+################
+resource "aws_ecr_repository" "api" {
+  name = var.repo_name
+  image_scanning_configuration { scan_on_push = true }
+  force_delete = true
+  tags = var.tags
+}
+
+################
+# CloudWatch Logs
+################
+resource "aws_cloudwatch_log_group" "ecs" {
+  name              = "/ecs/${var.repo_name}"
+  retention_in_days = 7
+  tags              = var.tags
+}
+
+################
+# ECS execution role (pull image + write logs)
+################
+data "aws_iam_policy_document" "ecs_task_exec_trust" {
+  statement {
+    effect = "Allow"
+    principals { type = "Service", identifiers = ["ecs-tasks.amazonaws.com"] }
+    actions = ["sts:AssumeRole"]
+  }
+}
+
+resource "aws_iam_role" "ecs_task_execution_role" {
+  name               = "ecsTaskExecutionRole-${var.repo_name}"
+  assume_role_policy = data.aws_iam_policy_document.ecs_task_exec_trust.json
+  tags               = var.tags
+}
+
+resource "aws_iam_role_policy_attachment" "ecs_task_exec_attach" {
+  role       = aws_iam_role.ecs_task_execution_role.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+}
+
+################
+# Networking + ALB
+################
+resource "aws_security_group" "alb_sg" {
+  name   = "alb-sg-${var.repo_name}"
+  vpc_id = data.aws_vpc.default.id
+
+  ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
+  }
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
+  }
+  tags = var.tags
+}
+
+resource "aws_lb" "public" {
+  name               = "alb-${var.repo_name}"
+  load_balancer_type = "application"
+  security_groups    = [aws_security_group.alb_sg.id]
+  subnets            = data.aws_subnets.default.ids
+  idle_timeout       = 60
+  tags               = var.tags
+}
+
+resource "aws_lb_target_group" "api_tg" {
+  name        = "tg-${var.repo_name}"
+  port        = 80
+  protocol    = "HTTP"
+  target_type = "ip"
+  vpc_id      = data.aws_vpc.default.id
+  health_check {
+    path                = "/ping"  # change if your health endpoint differs
+    healthy_threshold   = 2
+    unhealthy_threshold = 2
+    timeout             = 5
+    interval            = 15
+    matcher             = "200-399"
+  }
+  tags = var.tags
+}
+
+resource "aws_lb_listener" "http" {
+  load_balancer_arn = aws_lb.public.arn
+  port              = 80
+  protocol          = "HTTP"
+  default_action { type = "forward" target_group_arn = aws_lb_target_group.api_tg.arn }
+}
+
+################
+# ECS cluster, task, service
+################
+resource "aws_ecs_cluster" "api" {
+  name = "${var.repo_name}-cluster"
+  tags = var.tags
+}
+
+locals {
+  container_name = var.repo_name
+  registry       = regexreplace(aws_ecr_repository.api.repository_url, "/.*$", "")
+  image_uri      = "${aws_ecr_repository.api.repository_url}:${var.image_tag}"
+}
+
+resource "aws_ecs_task_definition" "api" {
+  family                   = var.repo_name
+  requires_compatibilities = ["FARGATE"]
+  network_mode             = "awsvpc"
+  cpu                      = 256
+  memory                   = 512
+
+  execution_role_arn = aws_iam_role.ecs_task_execution_role.arn
+  task_role_arn      = aws_iam_role.api_task_role.arn
+
+  container_definitions = jsonencode([
+    {
+      name      = local.container_name
+      image     = local.image_uri
+      essential = true
+      portMappings = [{ containerPort = 80, hostPort = 80, protocol = "tcp" }]
+      environment = [
+        { name = "AWS_REGION",        value = var.region },
+        { name = "UPLOAD_BUCKET",     value = aws_s3_bucket.uploads.bucket },
+        { name = "ASPNETCORE_URLS",   value = "http://+:80" }
+      ]
+      logConfiguration = {
+        logDriver = "awslogs"
+        options = {
+          awslogs-group         = aws_cloudwatch_log_group.ecs.name
+          awslogs-region        = var.region
+          awslogs-stream-prefix = "ecs"
+        }
+      }
+    }
+  ])
+
+  runtime_platform {
+    operating_system_family = "LINUX"
+    cpu_architecture        = "X86_64"
+  }
+
+  tags = var.tags
+}
+
+resource "aws_security_group" "svc_sg" {
+  name   = "svc-sg-${var.repo_name}"
+  vpc_id = data.aws_vpc.default.id
+  ingress {
+    from_port       = 80
+    to_port         = 80
+    protocol        = "tcp"
+    security_groups = [aws_security_group.alb_sg.id] # only ALB can reach tasks
+  }
+  egress { from_port = 0 to_port = 0 protocol = "-1" cidr_blocks = ["0.0.0.0/0"] ipv6_cidr_blocks = ["::/0"] }
+  tags = var.tags
+}
+
+# Build & push image before creating the service
+# (Rebuilds when Docker context, Dockerfile, platform, or tag changes)
+locals {
+  src_hash = md5(join("", [for f in fileset(var.docker_context, "**") : filemd5("${var.docker_context}/${f}")]))
+}
+
+resource "null_resource" "build_and_push" {
+  triggers = {
+    src_hash       = local.src_hash
+    image_tag      = var.image_tag
+    dockerfile     = var.dockerfile
+    docker_context = var.docker_context
+    docker_platform= var.docker_platform
+  }
+
+  provisioner "local-exec" {
+    interpreter = ["PowerShell", "-Command"]
+    command = <<-EOT
+      $ErrorActionPreference = "Stop"
+      aws ecr get-login-password --region ${var.region} | docker login --username AWS --password-stdin "${local.registry}"
+      docker build --platform ${var.docker_platform} -t "${local.image_uri}" -f "${var.dockerfile}" "${var.docker_context}"
+      docker push "${local.image_uri}"
+    EOT
+  }
+
+  depends_on = [aws_ecr_repository.api]
+}
+
+resource "aws_ecs_service" "api" {
+  name            = "${var.repo_name}-service"
+  cluster         = aws_ecs_cluster.api.id
+  task_definition = aws_ecs_task_definition.api.arn
+  desired_count   = 1
+  launch_type     = "FARGATE"
+  enable_execute_command = true
+
+  network_configuration {
+    subnets          = data.aws_subnets.default.ids
+    assign_public_ip = true
+    security_groups  = [aws_security_group.svc_sg.id]
+  }
+
+  load_balancer {
+    target_group_arn = aws_lb_target_group.api_tg.arn
+    container_name   = local.container_name
+    container_port   = 80
+  }
+
+  depends_on = [aws_lb_listener.http, null_resource.build_and_push]
+  tags       = var.tags
+}
+
+# After pushing a new image with the same tag, force ECS to redeploy
+resource "null_resource" "force_new_deploy" {
+  triggers = {
+    src_hash  = null_resource.build_and_push.triggers.src_hash
+    image_tag = var.image_tag
+  }
+  provisioner "local-exec" {
+    interpreter = ["PowerShell", "-Command"]
+    command = "aws ecs update-service --cluster ${aws_ecs_cluster.api.name} --service ${aws_ecs_service.api.name} --force-new-deployment --region ${var.region} | Out-Null"
+  }
+  depends_on = [aws_ecs_service.api, null_resource.build_and_push]
+}
+
+################
+# (Optional) EC2 instance profile output (if you later use EC2)
 ################
 resource "aws_iam_instance_profile" "api_instance_profile" {
   name = "FileUploaderApiInstanceProfile"
-  role = aws_iam_role.api_role.name
+  role = aws_iam_role.api_task_role.name
   tags = var.tags
 }
 
 ################
 # Outputs
 ################
-output "bucket_name" {
-  value = aws_s3_bucket.uploads.bucket
-}
-
-output "bucket_arn" {
-  value = aws_s3_bucket.uploads.arn
-}
-
-output "api_role_arn" {
-  value = aws_iam_role.api_role.arn
-}
-
-output "ec2_instance_profile_name" {
-  value = aws_iam_instance_profile.api_instance_profile.name
-}
+output "alb_dns_name"           { value = aws_lb.public.dns_name }
+output "ecr_repository_url"     { value = aws_ecr_repository.api.repository_url }
+output "bucket_name"            { value = aws_s3_bucket.uploads.bucket }
+output "api_task_role_arn"      { value = aws_iam_role.api_task_role.arn }
+output "ec2_instance_profile"   { value = aws_iam_instance_profile.api_instance_profile.name }
