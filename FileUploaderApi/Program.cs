@@ -1,0 +1,56 @@
+using Amazon;
+using Amazon.S3;
+using Microsoft.OpenApi.Models;
+using Microsoft.AspNetCore.Http.Features;
+
+var builder = WebApplication.CreateBuilder(args);
+
+
+// Add services to the container.
+// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+builder.Services.AddOpenApi();
+
+builder.Services.AddControllers();
+// Swagger
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "FileUploaderApi", Version = "v1" });
+});
+
+// CORS (optional, open for testing)
+builder.Services.AddCors(o => o.AddDefaultPolicy(p =>
+    p.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod()));
+
+var awsRegion = builder.Configuration["AWS:Region"] ?? "us-east-2";
+
+// AWS SDK client (uses IAM role in AWS; local uses ~/.aws/credentials)
+builder.Services.AddSingleton<IAmazonS3>(_ =>
+    new AmazonS3Client(RegionEndpoint.GetBySystemName(awsRegion)));
+
+// File upload size limit (optional, default is 128 MB)
+builder.Services.Configure<FormOptions>(o =>
+{
+    o.ValueLengthLimit = int.MaxValue;
+    o.MultipartBodyLengthLimit = long.Parse(builder.Configuration["FileUpload:MaxSizeBytes"] ?? "524288000"); // 500 MB
+    o.MemoryBufferThreshold = int.MaxValue;
+});
+
+var app = builder.Build();
+
+//app.UseCors();
+app.UseSwagger();
+app.UseSwaggerUI();
+
+// Configure the HTTP request pipeline.
+if (app.Environment.IsDevelopment())
+{
+    app.MapOpenApi();
+   
+}
+
+//app.UseHttpsRedirection();
+app.UseAuthorization();
+app.MapControllers();
+
+app.Run();

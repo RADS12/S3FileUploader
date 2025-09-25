@@ -1,0 +1,18 @@
+{
+  "version": 2,
+  "dgSpecHash": "vStg5gRTCHE=",
+  "success": true,
+  "projectFilePath": "C:\\Users\\radkr\\Documents\\Projects\\S3FileUploader\\FileUploaderApi\\FileUploaderApi.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\radkr\\.nuget\\packages\\awssdk.core\\4.0.0.29\\awssdk.core.4.0.0.29.nupkg.sha512",
+    "C:\\Users\\radkr\\.nuget\\packages\\awssdk.s3\\4.0.7.4\\awssdk.s3.4.0.7.4.nupkg.sha512",
+    "C:\\Users\\radkr\\.nuget\\packages\\microsoft.aspnetcore.openapi\\9.0.8\\microsoft.aspnetcore.openapi.9.0.8.nupkg.sha512",
+    "C:\\Users\\radkr\\.nuget\\packages\\microsoft.extensions.apidescription.server\\9.0.0\\microsoft.extensions.apidescription.server.9.0.0.nupkg.sha512",
+    "C:\\Users\\radkr\\.nuget\\packages\\microsoft.openapi\\1.6.25\\microsoft.openapi.1.6.25.nupkg.sha512",
+    "C:\\Users\\radkr\\.nuget\\packages\\swashbuckle.aspnetcore\\9.0.4\\swashbuckle.aspnetcore.9.0.4.nupkg.sha512",
+    "C:\\Users\\radkr\\.nuget\\packages\\swashbuckle.aspnetcore.swagger\\9.0.4\\swashbuckle.aspnetcore.swagger.9.0.4.nupkg.sha512",
+    "C:\\Users\\radkr\\.nuget\\packages\\swashbuckle.aspnetcore.swaggergen\\9.0.4\\swashbuckle.aspnetcore.swaggergen.9.0.4.nupkg.sha512",
+    "C:\\Users\\radkr\\.nuget\\packages\\swashbuckle.aspnetcore.swaggerui\\9.0.4\\swashbuckle.aspnetcore.swaggerui.9.0.4.nupkg.sha512"
+  ],
+  "logs": []
+}
