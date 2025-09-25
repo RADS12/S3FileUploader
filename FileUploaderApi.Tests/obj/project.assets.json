@@ -1519,11 +1519,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\radkr\\Documents\\Projects\\S3FileUploader\\FileUploaderApi.Tests\\FileUploaderApi.Tests.csproj",
+      "projectUniqueName": "C:\\Users\\radkr\\OneDrive\\Documents\\Projects\\S3FileUploader\\FileUploaderApi.Tests\\FileUploaderApi.Tests.csproj",
       "projectName": "FileUploaderApi.Tests",
-      "projectPath": "C:\\Users\\radkr\\Documents\\Projects\\S3FileUploader\\FileUploaderApi.Tests\\FileUploaderApi.Tests.csproj",
+      "projectPath": "C:\\Users\\radkr\\OneDrive\\Documents\\Projects\\S3FileUploader\\FileUploaderApi.Tests\\FileUploaderApi.Tests.csproj",
       "packagesPath": "C:\\Users\\radkr\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\radkr\\Documents\\Projects\\S3FileUploader\\FileUploaderApi.Tests\\obj\\",
+      "outputPath": "C:\\Users\\radkr\\OneDrive\\Documents\\Projects\\S3FileUploader\\FileUploaderApi.Tests\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\radkr\\AppData\\Roaming\\NuGet\\NuGet.Config"
@@ -1538,8 +1538,8 @@
         "net9.0": {
           "targetAlias": "net9.0",
           "projectReferences": {
-            "C:\\Users\\radkr\\Documents\\Projects\\S3FileUploader\\FileUploaderApi\\FileUploaderApi.csproj": {
-              "projectPath": "C:\\Users\\radkr\\Documents\\Projects\\S3FileUploader\\FileUploaderApi\\FileUploaderApi.csproj"
+            "C:\\Users\\radkr\\OneDrive\\Documents\\Projects\\S3FileUploader\\FileUploaderApi\\FileUploaderApi.csproj": {
+              "projectPath": "C:\\Users\\radkr\\OneDrive\\Documents\\Projects\\S3FileUploader\\FileUploaderApi\\FileUploaderApi.csproj"
             }
           }
         }

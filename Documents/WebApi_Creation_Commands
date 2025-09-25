@@ -1,0 +1,159 @@
+# -------------------------------------
+# Create a folder for your solution
+# -------------------------------------
+mkdir WebApiDemo
+cd WebApiDemo
+
+# Create solution
+dotnet new sln -n WebApiDemo
+
+# Create Web API project
+dotnet new webapi -n MyWebApi
+
+# Add Web API project to solution
+dotnet sln add MyWebApi/MyWebApi.csproj
+
+# (Optional) Create unit test project
+dotnet new xunit -n MyWebApi.Tests
+dotnet sln add MyWebApi.Tests/MyWebApi.Tests.csproj
+dotnet add MyWebApi.Tests/MyWebApi.Tests.csproj reference MyWebApi/MyWebApi.csproj
+
+# Build solution
+dotnet build
+
+# Run Web API (local dev)
+cd MyWebApi
+dotnet run
+
+# Run tests (if added)
+cd ../MyWebApi.Tests
+dotnet test
+
+# -------------------------------------
+# PUBLISHING COMMANDS
+# -------------------------------------
+
+# Go back to WebApi project folder
+cd ../MyWebApi
+
+# Publish for local folder output
+dotnet publish -c Release -o ./publish
+
+# Publish self-contained (include runtime, replace win-x64 with linux-x64 if needed)
+dotnet publish -c Release -r win-x64 --self-contained true -o ./publish
+
+
+# -------------------------------------
+# Api code:
+# -------------------------------------
+
+dotnet add package AWSSDK.S3
+dotnet add FileUploaderApi package Swashbuckle.AspNetCore
+
+# Add controller, Docker file etc.
+
+# -------------------------------------
+# Run locally:
+# -------------------------------------
+# In project folder:
+dotnet clean
+dotnet build
+dotnet run
+
+# OR Using Docker:
+docker build -t fileuploaderapi .
+docker run -p 8080:8080 -e ASPNETCORE_ENVIRONMENT=Development fileuploaderapi
+
+# OR from the solution root (where Dockerfile is)
+docker build -t fileuploaderapi:latest .
+docker run -p 8080:8080 fileuploaderapi:latest
+
+# -------------------------------------
+# Website:
+# -------------------------------------
+
+http://localhost:8080/swagger
+
+# -------------------------------------
+# Manually run API endpoints:
+# -------------------------------------
+# Quick cURL tests
+Upload (multipart to API):
+curl -F "file=@./somefile.pdf" http://localhost:8080/api/fileupload/upload
+→ {"key":"<generated-key>"}
+
+# Get presigned download URL:
+curl "http://localhost:8080/api/fileupload/download-url/<key>"
+
+# Get presigned upload URL (client PUT directly to S3):
+curl -X POST http://localhost:8080/api/fileupload/upload-url \
+  -H "Content-Type: application/json" \
+  -d '{"desiredKey":"myfolder/test.bin","minutes":15}'
+
+# Then PUT the file directly:
+curl -X PUT "<returned url>" --data-binary @./test.bin -H "Content-Type: application/octet-stream"
+
+# -------------------------------------
+# Git commands:
+# -------------------------------------
+# 1. Go to your solution root folder (where .sln is)
+cd "C:\Path\To\S3FileUploader"
+
+# 2. Initialize a new git repo (only once)
+git init
+
+# 3. Add all files for commit
+git add .
+
+# 4. Commit the files
+git commit -m "Initial commit for S3FileUploader"
+
+# 5. Rename current branch to main (GitHub default)
+git branch -M main
+
+# 6. Add remote (link local repo to GitHub repo)
+git remote add origin https://github.com/Rads12/S3FileUploader.git
+
+# 7. If remote was already set and wrong, update instead:
+# git remote set-url origin https://github.com/Rads12/S3FileUploader.git
+
+# 8. Verify the remote is correct
+git remote -v
+
+# 9. Push local main branch to remote (first time uses -u)
+git push -u origin main
+
+# 10. If remote already had commits (like README), sync before pushing
+# (pull with rebase to avoid merge commits)
+git pull --rebase origin main
+git push -u origin main
+
+# 11. Check which branches are tracking which remotes
+git branch -vv
+
+# 12. Set local main to track remote main explicitly
+git branch -u origin/main
+
+# 13. If you ever need to force overwrite remote with your local
+# (use with caution!)
+# git push --force-with-lease origin main
+
+# -------------------------------------
+# Create ECR repo and then push Docker Image:
+# -------------------------------------
+# Set region
+AWS_REGION=us-east-2
+
+# Get account ID
+ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+
+# Create ECR repo (safe to re-run; it errors if exists)
+aws ecr create-repository --repository-name fileuploaderapi --region $AWS_REGION || true
+
+# Login Docker to ECR
+aws ecr get-login-password --region $AWS_REGION | \
+  docker login --username AWS --password-stdin ${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
+
+# Tag & push
+docker tag fileuploaderapi:latest ${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/fileuploaderapi:latest
+docker push ${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/fileuploaderapi:latest

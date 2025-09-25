@@ -568,11 +568,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\radkr\\Documents\\Projects\\S3FileUploader\\FileUploaderApi\\FileUploaderApi.csproj",
+      "projectUniqueName": "C:\\Users\\radkr\\OneDrive\\Documents\\Projects\\S3FileUploader\\FileUploaderApi\\FileUploaderApi.csproj",
       "projectName": "FileUploaderApi",
-      "projectPath": "C:\\Users\\radkr\\Documents\\Projects\\S3FileUploader\\FileUploaderApi\\FileUploaderApi.csproj",
+      "projectPath": "C:\\Users\\radkr\\OneDrive\\Documents\\Projects\\S3FileUploader\\FileUploaderApi\\FileUploaderApi.csproj",
       "packagesPath": "C:\\Users\\radkr\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\radkr\\Documents\\Projects\\S3FileUploader\\FileUploaderApi\\obj\\",
+      "outputPath": "C:\\Users\\radkr\\OneDrive\\Documents\\Projects\\S3FileUploader\\FileUploaderApi\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\radkr\\AppData\\Roaming\\NuGet\\NuGet.Config"

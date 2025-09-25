@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "AYBKZ3Wkc5w=",
+  "dgSpecHash": "8WQszvpk19Q=",
   "success": true,
-  "projectFilePath": "C:\\Users\\radkr\\Documents\\Projects\\S3FileUploader\\FileUploaderApi.Tests\\FileUploaderApi.Tests.csproj",
+  "projectFilePath": "C:\\Users\\radkr\\OneDrive\\Documents\\Projects\\S3FileUploader\\FileUploaderApi.Tests\\FileUploaderApi.Tests.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\radkr\\.nuget\\packages\\awssdk.core\\4.0.0.29\\awssdk.core.4.0.0.29.nupkg.sha512",
     "C:\\Users\\radkr\\.nuget\\packages\\awssdk.s3\\4.0.7.4\\awssdk.s3.4.0.7.4.nupkg.sha512",
