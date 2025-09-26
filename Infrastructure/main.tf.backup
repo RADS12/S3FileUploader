@@ -1,57 +1,91 @@
 terraform {
-  required_version = ">= 1.6.0"
   required_providers {
-    aws = { source = "hashicorp/aws", version = ">= 5.0" }
-    null = { source = "hashicorp/null", version = ">= 3.2.3" }
+    aws  = { source = "hashicorp/aws" }
+    null = { source = "hashicorp/null" }
   }
 }
 
-################
+##############
 # Variables
-################
-variable "region"         { type = string  default = "us-east-2" }
-variable "bucket_name"    { type = string  description = "Existing S3 bucket name" }
-variable "repo_name"      { type = string  default = "file-uploader-api" }
-variable "image_tag"      { type = string  default = "dev" }          # e.g., 20250925-1412 or git sha
-variable "docker_context" { type = string  default = "." }            # path to your API source (has Dockerfile)
-variable "dockerfile"     { type = string  default = "Dockerfile" }
-variable "docker_platform"{ type = string  default = "linux/amd64" }
+##############
+variable "region" {
+  type    = string
+  default = "us-east-2"
+}
+
+variable "bucket_name" {
+  type        = string
+  description = "rad-s3-demo-first-1"
+}
+
+variable "repo_name" {
+  type    = string
+  default = "file-uploader-api"
+}
+
+variable "image_tag" {
+  type    = string
+  default = "dev" # e.g., 20250925-1412 or git-sha
+}
+
+variable "docker_context" {
+  type    = string
+  default = "." # path to folder containing Dockerfile
+}
+
+variable "dockerfile" {
+  type    = string
+  default = "Dockerfile"
+}
+
+variable "docker_platform" {
+  type    = string
+  default = "linux/amd64"
+}
+
 
 variable "tags" {
   type = map(string)
-  default = { Project = "file-uploader-api", Owner = "rad", Env = "dev" }
+  default = {
+    Project = "file-uploader-api"
+    Owner   = "rad"
+    Env     = "dev"
+  }
 }
 
 provider "aws" { region = var.region }
 
-################
-# Existing bucket reference (no creation)
-################
+##############
+# Existing S3 bucket (reference only)
+##############
 data "aws_s3_bucket" "uploads" {
   bucket = var.bucket_name
 }
 
-################
+##############
 # ECR repo
-################
+##############
 resource "aws_ecr_repository" "api" {
   name = var.repo_name
   image_scanning_configuration { scan_on_push = true }
   force_delete = true
-  tags = var.tags
+  tags         = var.tags
 }
 
-################
-# IAM: App Runner needs two roles:
-# 1) access_role (pull image from ECR)
-# 2) instance_role (your code uses this to access S3)
-################
+##############
+# IAM for App Runner
+# 1) Access role (pull image from ECR)
+# 2) Instance role (runtime credentials for S3)
+##############
 
-# --- 1) Access role to pull from ECR ---
+# 1) Access role trust
 data "aws_iam_policy_document" "apprunner_access_trust" {
   statement {
     effect = "Allow"
-    principals { type = "Service", identifiers = ["build.apprunner.amazonaws.com"] }
+    principals {
+      type        = "Service"
+      identifiers = ["build.apprunner.amazonaws.com"]
+    }
     actions = ["sts:AssumeRole"]
   }
 }
@@ -82,11 +116,14 @@ resource "aws_iam_role_policy_attachment" "apprunner_access_attach" {
   policy_arn = aws_iam_policy.apprunner_ecr_pull.arn
 }
 
-# --- 2) Instance role (your app's AWS creds) ---
+# 2) Instance role trust
 data "aws_iam_policy_document" "apprunner_instance_trust" {
   statement {
     effect = "Allow"
-    principals { type = "Service", identifiers = ["tasks.apprunner.amazonaws.com"] }
+    principals {
+      type        = "Service"
+      identifiers = ["tasks.apprunner.amazonaws.com"]
+    }
     actions = ["sts:AssumeRole"]
   }
 }
@@ -95,18 +132,18 @@ resource "aws_iam_role" "apprunner_instance_role" {
   assume_role_policy = data.aws_iam_policy_document.apprunner_instance_trust.json
   tags               = var.tags
 }
-# S3 perms for your bucket
+# S3 read/write for your bucket
 data "aws_iam_policy_document" "s3_rw" {
   statement {
-    sid     = "ListBucket"
-    effect  = "Allow"
-    actions = ["s3:ListBucket"]
+    sid       = "ListBucket"
+    effect    = "Allow"
+    actions   = ["s3:ListBucket"]
     resources = [data.aws_s3_bucket.uploads.arn]
   }
   statement {
-    sid     = "ObjectRW"
-    effect  = "Allow"
-    actions = ["s3:GetObject", "s3:PutObject", "s3:DeleteObject"]
+    sid       = "ObjectRW"
+    effect    = "Allow"
+    actions   = ["s3:GetObject", "s3:PutObject", "s3:DeleteObject"]
     resources = ["${data.aws_s3_bucket.uploads.arn}/*"]
   }
 }
@@ -119,31 +156,45 @@ resource "aws_iam_role_policy_attachment" "apprunner_instance_attach" {
   policy_arn = aws_iam_policy.s3_rw.arn
 }
 
-################
-# Build & push image locally (PowerShell)
-################
+##############
+# Locals (paths + image info)
+##############
 locals {
-  build_context   = abspath(var.docker_context)
-  dockerfile_path = can(regex("^\\.|/|[A-Za-z]:", var.dockerfile)) ? var.dockerfile : joinpath(local.build_context, var.dockerfile)
-  registry        = regexreplace(aws_ecr_repository.api.repository_url, "/.*$", "")
-  image_uri       = "${aws_ecr_repository.api.repository_url}:${var.image_tag}"
+  # Make paths relative to this .tf file's folder
+  build_context   = abspath("${path.module}/${var.docker_context}")
+  dockerfile_path = "${local.build_context}/${var.dockerfile}"
 
-  # Rebuild on any source change under docker_context
-  src_hash = md5(join("", [for f in fileset(local.build_context, "**") : filemd5("${local.build_context}/${f}")]))
+  # ECR bits
+  registry  = element(split("/", aws_ecr_repository.api.repository_url), 0)
+  image_uri = "${aws_ecr_repository.api.repository_url}:${var.image_tag}"
 }
 
+##############
+# Prechecks: Docker running + paths exist (Windows PowerShell)
+##############
+resource "null_resource" "precheck" {
+  provisioner "local-exec" {
+    interpreter = ["PowerShell", "-Command"]
+    command     = <<-EOT
+      $ErrorActionPreference = "Stop"
+      docker info | Out-Null
+      if (-not (Test-Path "${local.build_context}"))   { throw "Build context not found: ${local.build_context}" }
+      if (-not (Test-Path "${local.dockerfile_path}")) { throw "Dockerfile not found: ${local.dockerfile_path}" }
+    EOT
+  }
+}
+
+##############
+# Build & push image to ECR (PowerShell)
+##############
 resource "null_resource" "build_and_push" {
   triggers = {
-    src_hash        = local.src_hash
-    image_tag       = var.image_tag
-    docker_context  = local.build_context
-    dockerfile_path = local.dockerfile_path
-    docker_platform = var.docker_platform
+    image_tag = var.image_tag # change tag to force rebuild
   }
 
   provisioner "local-exec" {
     interpreter = ["PowerShell", "-Command"]
-    command = <<-EOT
+    command     = <<-EOT
       $ErrorActionPreference = "Stop"
       aws ecr get-login-password --region ${var.region} | docker login --username AWS --password-stdin "${local.registry}"
       docker build --platform ${var.docker_platform} -t "${local.image_uri}" -f "${local.dockerfile_path}" "${local.build_context}"
@@ -151,12 +202,15 @@ resource "null_resource" "build_and_push" {
     EOT
   }
 
-  depends_on = [aws_ecr_repository.api]
+  depends_on = [
+    aws_ecr_repository.api,
+    null_resource.precheck
+  ]
 }
 
-################
-# App Runner service (no VPC needed)
-################
+##############
+# App Runner service (no VPC)
+##############
 resource "aws_apprunner_service" "api" {
   service_name = var.repo_name
 
@@ -164,7 +218,7 @@ resource "aws_apprunner_service" "api" {
     auto_deployments_enabled = true
 
     authentication_configuration {
-      access_role_arn = aws_iam_role.apprunner_access_role.arn  # to pull from ECR
+      access_role_arn = aws_iam_role.apprunner_access_role.arn
     }
 
     image_repository {
@@ -183,20 +237,19 @@ resource "aws_apprunner_service" "api" {
   }
 
   instance_configuration {
-    cpu                = "1 vCPU"
-    memory             = "2 GB"
-    instance_role_arn  = aws_iam_role.apprunner_instance_role.arn  # S3 access at runtime
+    cpu               = "1 vCPU"
+    memory            = "2 GB"
+    instance_role_arn = aws_iam_role.apprunner_instance_role.arn
   }
 
-  tags = var.tags
-
+  tags       = var.tags
   depends_on = [null_resource.build_and_push]
 }
 
-################
+##############
 # Outputs
-################
-output "service_url"     { value = aws_apprunner_service.api.service_url }
-output "ecr_repository"  { value = aws_ecr_repository.api.repository_url }
-output "image_tag_used"  { value = var.image_tag }
-output "bucket_in_use"   { value = data.aws_s3_bucket.uploads.bucket }
+##############
+output "service_url" { value = aws_apprunner_service.api.service_url }
+output "ecr_repository" { value = aws_ecr_repository.api.repository_url }
+output "image_tag_used" { value = var.image_tag }
+output "bucket_in_use" { value = data.aws_s3_bucket.uploads.bucket }

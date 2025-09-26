@@ -2,6 +2,9 @@
 **/bin/
 **/obj/
 **/out/
+**/Debug/
+**/Release/
+**/publish/
 
 # Ignore Visual Studio files
 .vs/
@@ -55,3 +58,14 @@ node_modules/
 .env
 .env.local
 .env.*.local
+
+# Ignore Infrastructure folder (Terraform)
+Infrastructure/
+
+# Ignore Documents folder
+Documents/
+
+# Ignore large folders that might regenerate
+.terraform/
+terraform.tfstate*
+*.tfvars
