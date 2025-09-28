@@ -104,6 +104,7 @@ http://localhost:8080/swagger
 ### Manual API Testing
 
 #### S3 Endpoints
+
 ```bash
 # Upload file (multipart to API)
 curl -F "file=@./somefile.pdf" http://localhost:8080/api/fileupload/upload
@@ -121,6 +122,7 @@ curl -X PUT "<returned url>" --data-binary @./test.bin -H "Content-Type: applica
 ```
 
 #### DynamoDB Endpoints
+
 ```bash
 # Test DynamoDB health
 curl http://localhost:8080/api/DynamoFile/health
@@ -147,6 +149,7 @@ curl -X DELETE http://localhost:8080/api/DynamoFile/[FILE_ID]
 ### Environment-Specific Table Names
 
 #### Production (appsettings.json):
+
 ```json
 {
   "DynamoDB": {
@@ -157,16 +160,18 @@ curl -X DELETE http://localhost:8080/api/DynamoFile/[FILE_ID]
 ```
 
 #### Development (appsettings.Development.json):
+
 ```json
 {
   "DynamoDB": {
-    "TableName": "FileUploads-Dev", 
+    "TableName": "FileUploads-Dev",
     "Region": "us-east-2"
   }
 }
 ```
 
 ### Environment Variable Override
+
 ```bash
 # Override table name via environment variable
 set DYNAMODB__TABLENAME=FileUploads-Test
@@ -176,6 +181,7 @@ docker run -p 8080:8080 -e DYNAMODB__TABLENAME=FileUploads-Custom fileuploaderap
 ```
 
 ### Terraform Configuration
+
 ```bash
 # Deploy with custom table name
 terraform apply -var="dynamodb_table_name=FileUploads-MyApp"
@@ -314,6 +320,7 @@ aws dynamodb scan --table-name FileUploads --limit 1 --region us-east-2
 ### DynamoDB Configuration Options
 
 #### Different Table Names by Environment
+
 ```bash
 # Development
 terraform apply -var="dynamodb_table_name=FileUploads-Dev"
@@ -326,6 +333,7 @@ terraform apply -var="dynamodb_table_name=FileUploads"
 ```
 
 #### Billing Mode Options
+
 ```bash
 # Provisioned billing (predictable costs)
 terraform apply -var="dynamodb_billing_mode=PROVISIONED" \

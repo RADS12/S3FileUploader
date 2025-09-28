@@ -7,6 +7,7 @@ Your application now supports **configuration-based DynamoDB table management**.
 ## 📋 Quick Reference
 
 ### Build Commands
+
 ```bash
 # Build the Docker image
 docker build -t fileuploaderapi:latest .
@@ -18,6 +19,7 @@ docker build -t fileuploaderapi:dev .
 ### Environment-Based Deployment
 
 #### 🔵 Development Environment
+
 Uses `FileUploads-Dev` table (from `appsettings.Development.json`)
 
 ```bash
@@ -29,7 +31,8 @@ docker run -p 8080:8080 \
   fileuploaderapi:latest
 ```
 
-#### 🟢 Production Environment  
+#### 🟢 Production Environment
+
 Uses `FileUploads` table (from `appsettings.json`)
 
 ```bash
@@ -42,6 +45,7 @@ docker run -p 8080:8080 \
 ```
 
 #### 🟡 Custom Table Name
+
 Override table name regardless of environment
 
 ```bash
@@ -59,6 +63,7 @@ docker run -p 8080:8080 \
 ### Multi-Environment Deployment
 
 #### Feature Testing
+
 ```bash
 docker run -p 8080:8080 \
   -e ASPNETCORE_ENVIRONMENT=Development \
@@ -70,6 +75,7 @@ docker run -p 8080:8080 \
 ```
 
 #### Staging Environment
+
 ```bash
 docker run -p 8080:8080 \
   -e ASPNETCORE_ENVIRONMENT=Staging \
@@ -83,6 +89,7 @@ docker run -p 8080:8080 \
 ### Volume Mount for AWS Credentials
 
 #### Windows
+
 ```bash
 docker run -p 8080:8080 \
   -e ASPNETCORE_ENVIRONMENT=Development \
@@ -92,6 +99,7 @@ docker run -p 8080:8080 \
 ```
 
 #### Linux/MacOS
+
 ```bash
 docker run -p 8080:8080 \
   -e ASPNETCORE_ENVIRONMENT=Development \
@@ -118,6 +126,7 @@ docker run -p 8080:8080 \
 ## 🧪 Testing Commands
 
 ### Health Check
+
 ```bash
 # Test application health
 curl http://localhost:8080/health
@@ -129,6 +138,7 @@ curl http://localhost:8080/api/DynamoFile/health
 ### API Testing
 
 #### DynamoDB Endpoints
+
 ```bash
 # Upload file
 curl -F "file=@./test.pdf" \
@@ -146,6 +156,7 @@ curl -X DELETE http://localhost:8080/api/DynamoFile/[FILE_ID]
 ```
 
 #### S3 Endpoints (still available)
+
 ```bash
 # Upload to S3
 curl -F "file=@./test.pdf" http://localhost:8080/api/fileupload/upload
@@ -195,23 +206,25 @@ docker exec -it [CONTAINER_ID] /bin/bash
 
 ## 🌐 Environment Configuration Matrix
 
-| Environment | Table Name | Config File | Environment Variable Override |
-|------------|------------|-------------|------------------------------|
-| **Development** | `FileUploads-Dev` | `appsettings.Development.json` | `DYNAMODB__TABLENAME=FileUploads-Dev` |
-| **Staging** | `FileUploads-Stage` | `appsettings.Staging.json` | `DYNAMODB__TABLENAME=FileUploads-Stage` |
-| **Production** | `FileUploads` | `appsettings.json` | `DYNAMODB__TABLENAME=FileUploads` |
-| **Custom** | Any name | Any file | `DYNAMODB__TABLENAME=YourTableName` |
+| Environment     | Table Name          | Config File                    | Environment Variable Override           |
+| --------------- | ------------------- | ------------------------------ | --------------------------------------- |
+| **Development** | `FileUploads-Dev`   | `appsettings.Development.json` | `DYNAMODB__TABLENAME=FileUploads-Dev`   |
+| **Staging**     | `FileUploads-Stage` | `appsettings.Staging.json`     | `DYNAMODB__TABLENAME=FileUploads-Stage` |
+| **Production**  | `FileUploads`       | `appsettings.json`             | `DYNAMODB__TABLENAME=FileUploads`       |
+| **Custom**      | Any name            | Any file                       | `DYNAMODB__TABLENAME=YourTableName`     |
 
 ## 🔍 Troubleshooting
 
 ### Common Issues
 
 #### 1. AWS Credentials Not Found
+
 ```
 Error: Failed to resolve AWS credentials
 ```
 
 **Solutions:**
+
 ```bash
 # Verify AWS CLI is configured
 aws configure list
@@ -228,11 +241,13 @@ docker run -p 8080:8080 \
 ```
 
 #### 2. DynamoDB Table Not Found
+
 ```
 Error: ResourceNotFoundException: Requested resource not found
 ```
 
 **Solutions:**
+
 ```bash
 # Check if table exists
 aws dynamodb describe-table --table-name FileUploads --region us-east-2
@@ -246,11 +261,13 @@ docker run -p 8080:8080 -e DYNAMODB__TABLENAME=YourExistingTable ...
 ```
 
 #### 3. Port Already in Use
+
 ```
 Error: bind: address already in use
 ```
 
 **Solutions:**
+
 ```bash
 # Use different port
 docker run -p 8081:8080 ...
@@ -261,11 +278,13 @@ docker stop [CONTAINER_ID]
 ```
 
 #### 4. Configuration Not Loading
+
 ```
 Using fallback table name: FileUploads
 ```
 
 **Solutions:**
+
 ```bash
 # Check environment variable format (double underscore)
 -e DYNAMODB__TABLENAME=YourTable
@@ -277,6 +296,7 @@ docker exec -it [CONTAINER_ID] cat /app/appsettings.json
 ## 📊 Monitoring and Logs
 
 ### Application Health
+
 ```bash
 # Health endpoint
 curl http://localhost:8080/health
@@ -289,6 +309,7 @@ curl http://localhost:8080/api/DynamoFile/health
 ```
 
 ### Container Resources
+
 ```bash
 # Monitor resource usage
 docker stats
@@ -298,6 +319,7 @@ docker inspect [CONTAINER_ID]
 ```
 
 ### Log Analysis
+
 ```bash
 # Search for specific errors
 docker logs [CONTAINER_ID] 2>&1 | grep -i "error"
@@ -312,6 +334,7 @@ docker logs --since 30m [CONTAINER_ID]
 ## 🚀 Deployment Scripts
 
 ### Quick Development Start
+
 ```bash
 #!/bin/bash
 # dev-start.sh
@@ -330,6 +353,7 @@ echo "Swagger UI: http://localhost:8080/swagger/index.html"
 ```
 
 ### Production Deployment
+
 ```bash
 #!/bin/bash
 # prod-deploy.sh

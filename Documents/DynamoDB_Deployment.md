@@ -832,7 +832,7 @@ docker run -p 8080:8080 \
   -e AWS_DEFAULT_REGION=us-east-2 \
   fileuploaderapi:latest
 
-# Development environment (uses FileUploads-Dev table) 
+# Development environment (uses FileUploads-Dev table)
 docker run -p 8080:8080 \
   -e ASPNETCORE_ENVIRONMENT=Development \
   -e AWS_ACCESS_KEY_ID=$(aws configure get aws_access_key_id) \

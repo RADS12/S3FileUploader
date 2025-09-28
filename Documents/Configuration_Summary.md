@@ -6,21 +6,21 @@ Your S3FileUploader project now supports **configuration-based DynamoDB table ma
 
 ### 🔧 **Code Changes**
 
-| File | Change | Impact |
-|------|--------|--------|
-| `DynamoFileService.cs` | Reads table name from configuration | ✅ Dynamic table selection |
-| `appsettings.Development.json` | Uses `FileUploads-Dev` table | ✅ Environment separation |
-| `Dockerfile` | Added DynamoDB environment variables | ✅ Runtime configuration |
+| File                           | Change                               | Impact                     |
+| ------------------------------ | ------------------------------------ | -------------------------- |
+| `DynamoFileService.cs`         | Reads table name from configuration  | ✅ Dynamic table selection |
+| `appsettings.Development.json` | Uses `FileUploads-Dev` table         | ✅ Environment separation  |
+| `Dockerfile`                   | Added DynamoDB environment variables | ✅ Runtime configuration   |
 
 ### 📋 **Updated Documentation**
 
-| Document | Updates | Purpose |
-|----------|---------|---------|
-| `WebApi_Creation_Commands.md` | Added configuration sections & DynamoDB APIs | Complete command reference |
-| `DynamoDB_Deployment.md` | Updated with config-based examples | Infrastructure deployment |
-| `Docker_Commands_Reference.md` | **NEW** - Comprehensive Docker guide | Container management |
-| `Docker_Command.bs` | Updated with environment-specific commands | Quick reference |
-| `Configuration_Guide.md` | **NEW** - Complete config documentation | Configuration management |
+| Document                       | Updates                                      | Purpose                    |
+| ------------------------------ | -------------------------------------------- | -------------------------- |
+| `WebApi_Creation_Commands.md`  | Added configuration sections & DynamoDB APIs | Complete command reference |
+| `DynamoDB_Deployment.md`       | Updated with config-based examples           | Infrastructure deployment  |
+| `Docker_Commands_Reference.md` | **NEW** - Comprehensive Docker guide         | Container management       |
+| `Docker_Command.bs`            | Updated with environment-specific commands   | Quick reference            |
+| `Configuration_Guide.md`       | **NEW** - Complete config documentation      | Configuration management   |
 
 ## 🚀 **How to Use Configuration-Based Approach**
 
@@ -33,7 +33,7 @@ docker run -p 8080:8080 -e ASPNETCORE_ENVIRONMENT=Development \
   -e AWS_SECRET_ACCESS_KEY=$(aws configure get aws_secret_access_key) \
   -e AWS_DEFAULT_REGION=us-east-2 fileuploaderapi:latest
 
-# Production (uses FileUploads table) 
+# Production (uses FileUploads table)
 docker run -p 8080:8080 -e ASPNETCORE_ENVIRONMENT=Production \
   -e AWS_ACCESS_KEY_ID=$(aws configure get aws_access_key_id) \
   -e AWS_SECRET_ACCESS_KEY=$(aws configure get aws_secret_access_key) \
@@ -70,33 +70,37 @@ docker run -p 8080:8080 -e DYNAMODB__TABLENAME=FileUploads-MyApp ...
 
 ## 📊 **Environment Matrix**
 
-| Scenario | Environment | Table Name | Source |
-|----------|-------------|------------|---------|
-| **Development** | `Development` | `FileUploads-Dev` | `appsettings.Development.json` |
-| **Production** | `Production` | `FileUploads` | `appsettings.json` |
+| Scenario            | Environment   | Table Name                | Source                         |
+| ------------------- | ------------- | ------------------------- | ------------------------------ |
+| **Development**     | `Development` | `FileUploads-Dev`         | `appsettings.Development.json` |
+| **Production**      | `Production`  | `FileUploads`             | `appsettings.json`             |
 | **Feature Testing** | `Development` | `FileUploads-Feature-XYZ` | `DYNAMODB__TABLENAME` override |
-| **Multi-Tenant** | Any | `FileUploads-TenantA` | `DYNAMODB__TABLENAME` override |
-| **Custom** | Any | Any name | `DYNAMODB__TABLENAME` override |
+| **Multi-Tenant**    | Any           | `FileUploads-TenantA`     | `DYNAMODB__TABLENAME` override |
+| **Custom**          | Any           | Any name                  | `DYNAMODB__TABLENAME` override |
 
 ## 🧪 **Testing Commands**
 
 ### **Quick Health Check**
+
 ```bash
 curl http://localhost:8080/api/DynamoFile/health
 ```
 
 ### **Upload Test**
+
 ```bash
 curl -F "file=@./test.pdf" -F "uploadedBy=testuser" \
   http://localhost:8080/api/DynamoFile/upload
 ```
 
 ### **List Files**
+
 ```bash
 curl http://localhost:8080/api/DynamoFile
 ```
 
 ### **Verify Table Usage**
+
 ```bash
 # Check Docker logs to see which table is being used
 docker logs [CONTAINER_ID] | grep -i "table"
@@ -115,6 +119,7 @@ variable "dynamodb_table_name" {
 ```
 
 Deploy with custom names:
+
 ```bash
 terraform apply -var="dynamodb_table_name=FileUploads-Production"
 terraform apply -var="dynamodb_table_name=FileUploads-Development"
@@ -128,7 +133,7 @@ terraform apply -var="dynamodb_table_name=FileUploads-Staging"
 ├── 🐳 Dockerfile (updated with DynamoDB env vars)
 ├── ⚙️ FileUploaderApi/
 │   ├── appsettings.json (Production: FileUploads)
-│   ├── appsettings.Development.json (Dev: FileUploads-Dev)  
+│   ├── appsettings.Development.json (Dev: FileUploads-Dev)
 │   └── Services/DynamoFileService.cs (config-based table name)
 ├── 🏗️ Infrastructure/
 │   ├── variables.tf (dynamodb_table_name support)
@@ -149,7 +154,7 @@ terraform apply -var="dynamodb_table_name=FileUploads-Staging"
 ✅ **Multi-Tenant Support** with table per tenant  
 ✅ **Infrastructure-Code Alignment** via Terraform variables  
 ✅ **Development Flexibility** with environment overrides  
-✅ **Production Safety** with separate data stores  
+✅ **Production Safety** with separate data stores
 
 ## 🚀 **Next Steps**
 
