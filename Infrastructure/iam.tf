@@ -85,9 +85,39 @@ resource "aws_iam_policy" "s3_rw" {
   policy = data.aws_iam_policy_document.s3_rw.json
 }
 
+# DynamoDB read/write permissions for the app
+data "aws_iam_policy_document" "dynamodb_rw" {
+  statement {
+    sid    = "DynamoDBTableAccess"
+    effect = "Allow"
+    actions = [
+      "dynamodb:GetItem",
+      "dynamodb:PutItem",
+      "dynamodb:UpdateItem",
+      "dynamodb:DeleteItem",
+      "dynamodb:Query",
+      "dynamodb:Scan"
+    ]
+    resources = [
+      aws_dynamodb_table.file_uploads.arn,
+      "${aws_dynamodb_table.file_uploads.arn}/index/*"
+    ]
+  }
+}
+
+resource "aws_iam_policy" "dynamodb_rw" {
+  name   = "AppRunnerDynamoDBRW-${var.repo_name}"
+  policy = data.aws_iam_policy_document.dynamodb_rw.json
+}
+
 resource "aws_iam_role_policy_attachment" "apprunner_instance_attach" {
   role       = aws_iam_role.apprunner_instance_role.name
   policy_arn = aws_iam_policy.s3_rw.arn
+}
+
+resource "aws_iam_role_policy_attachment" "apprunner_dynamodb_attach" {
+  role       = aws_iam_role.apprunner_instance_role.name
+  policy_arn = aws_iam_policy.dynamodb_rw.arn
 }
 
 # ECS Execution Role (for pulling images and logs)

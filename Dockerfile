@@ -39,6 +39,15 @@ EXPOSE 8080
 ENV ASPNETCORE_URLS=http://+:8080
 #ENV ASPNETCORE_ENVIRONMENT=Production
 
+# DynamoDB Configuration (can be overridden at runtime)
+#ENV DYNAMODB__TABLENAME=FileUploads
+#ENV DYNAMODB__REGION=us-east-2
+
+# AWS Configuration (provide at runtime for security)
+#ENV AWS_DEFAULT_REGION=us-east-2
+#ENV AWS_ACCESS_KEY_ID=
+#ENV AWS_SECRET_ACCESS_KEY=
+
 # Health check
 #HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
 # CMD curl -f http://localhost:8080/weatherforecast || exit 1

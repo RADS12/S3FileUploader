@@ -1,0 +1,140 @@
+### ✅ WORKING Docker Commands - Configuration-Based Approach
+
+```bash
+# 🚀 FASTEST - Development with auto table selection (FileUploads-Dev)
+docker run -p 8080:8080 -e ASPNETCORE_ENVIRONMENT=Development -e AWS_ACCESS_KEY_ID=$(aws configure get aws_access_key_id) -e AWS_SECRET_ACCESS_KEY=$(aws configure get aws_secret_access_key) -e AWS_DEFAULT_REGION=us-east-2 fileuploaderapi:latest
+
+# 🟢 Production with auto table selection (FileUploads)
+docker run -p 8080:8080 -e ASPNETCORE_ENVIRONMENT=Production -e AWS_ACCESS_KEY_ID=$(aws configure get aws_access_key_id) -e AWS_SECRET_ACCESS_KEY=$(aws configure get aws_secret_access_key) -e AWS_DEFAULT_REGION=us-east-2 fileuploaderapi:latest
+
+# 🎯 Custom table override (any environment)
+docker run -p 8080:8080 -e ASPNETCORE_ENVIRONMENT=Development -e DYNAMODB__TABLENAME=FileUploads-MyCustom -e AWS_ACCESS_KEY_ID=$(aws configure get aws_access_key_id) -e AWS_SECRET_ACCESS_KEY=$(aws configure get aws_secret_access_key) -e AWS_DEFAULT_REGION=us-east-2 fileuploaderapi:latest
+
+# 🔑 Manual credentials (replace with your actual keys)
+docker run -p 8080:8080 -e ASPNETCORE_ENVIRONMENT=Development -e AWS_ACCESS_KEY_ID=AKIAZ2KRD6VAZDJZUXVK -e AWS_SECRET_ACCESS_KEY=your_secret_key -e AWS_DEFAULT_REGION=us-east-2 fileuploaderapi:latest
+
+# 📁 Volume mount (Windows PowerShell - FIXED)
+docker run -p 8080:8080 -e ASPNETCORE_ENVIRONMENT=Development -v "C:\Users\radkr\.aws:/root/.aws:ro" fileuploaderapi:latest
+
+# 📁 Volume mount (Alternative Windows format)
+docker run -p 8080:8080 -e ASPNETCORE_ENVIRONMENT=Development -v "C:/Users/radkr/.aws:/root/.aws:ro" fileuploaderapi:latest
+```
+
+### 🧪 Testing Commands
+
+```bash
+# Stop all containers first
+docker ps -q | ForEach-Object { docker stop $_ }
+
+# Build fresh and run with development config
+docker build -t fileuploaderapi:latest .; docker run -p 8080:8080 -e ASPNETCORE_ENVIRONMENT=Development -e AWS_ACCESS_KEY_ID=$(aws configure get aws_access_key_id) -e AWS_SECRET_ACCESS_KEY=$(aws configure get aws_secret_access_key) -e AWS_DEFAULT_REGION=us-east-2 fileuploaderapi:latest
+
+# Check AWS CLI config
+aws configure list
+
+# Test DynamoDB health
+curl http://localhost:8080/api/DynamoFile/health
+```
+
+### 🏷️ Environment-Specific Commands
+
+```bash
+# Feature branch testing
+docker run -p 8080:8080 -e ASPNETCORE_ENVIRONMENT=Development -e DYNAMODB__TABLENAME=FileUploads-Feature-Auth -e AWS_ACCESS_KEY_ID=$(aws configure get aws_access_key_id) -e AWS_SECRET_ACCESS_KEY=$(aws configure get aws_secret_access_key) -e AWS_DEFAULT_REGION=us-east-2 fileuploaderapi:latest
+
+# Staging environment
+docker run -p 8080:8080 -e ASPNETCORE_ENVIRONMENT=Staging -e DYNAMODB__TABLENAME=FileUploads-Stage -e AWS_ACCESS_KEY_ID=$(aws configure get aws_access_key_id) -e AWS_SECRET_ACCESS_KEY=$(aws configure get aws_secret_access_key) -e AWS_DEFAULT_REGION=us-east-2 fileuploaderapi:latest
+
+# Multi-tenant testing
+docker run -p 8080:8080 -e ASPNETCORE_ENVIRONMENT=Development -e DYNAMODB__TABLENAME=FileUploads-TenantA -e AWS_ACCESS_KEY_ID=$(aws configure get aws_access_key_id) -e AWS_SECRET_ACCESS_KEY=$(aws configure get aws_secret_access_key) -e AWS_DEFAULT_REGION=us-east-2 fileuploaderapi:latest
+```
+
+### API Testing Commands with Configuration Awareness
+
+```bash
+# Test DynamoDB health
+curl http://localhost:8080/api/DynamoFile/health
+
+# Upload to current configured table
+curl -F "file=@./test.pdf" -F "uploadedBy=testuser" http://localhost:8080/api/DynamoFile/upload
+
+# List files in current configured table
+curl http://localhost:8080/api/DynamoFile
+
+# Download file by ID
+curl -o downloaded.pdf http://localhost:8080/api/DynamoFile/download/[FILE_ID]
+
+# Delete file by ID
+curl -X DELETE http://localhost:8080/api/DynamoFile/[FILE_ID]
+
+# Check which table is being used (look for logs)
+docker logs [CONTAINER_ID] | grep -i "table"
+```
+
+### Quick Commands
+
+```bash
+# Build and run Development (PowerShell)
+docker build -t fileuploaderapi:latest .; docker run -p 8080:8080 -e ASPNETCORE_ENVIRONMENT=Development -e AWS_ACCESS_KEY_ID=$(aws configure get aws_access_key_id) -e AWS_SECRET_ACCESS_KEY=$(aws configure get aws_secret_access_key) -e AWS_DEFAULT_REGION=us-east-2 fileuploaderapi:latest
+
+# Stop all containers and run Production
+docker ps -q | ForEach-Object { docker stop $_ }; docker run -p 8080:8080 -e ASPNETCORE_ENVIRONMENT=Production -e AWS_ACCESS_KEY_ID=$(aws configure get aws_access_key_id) -e AWS_SECRET_ACCESS_KEY=$(aws configure get aws_secret_access_key) -e AWS_DEFAULT_REGION=us-east-2 fileuploaderapi:latest
+
+# Quick table verification
+aws dynamodb list-tables --region us-east-2
+
+# Clean up Docker system
+docker system prune -f
+```
+
+### 🔧 **Troubleshooting Common Errors**
+
+#### **Volume Mount Error (Windows)**
+```
+Error: Invalid bind mount spec
+```
+**Fix:** Use proper Windows path quoting
+```bash
+# ❌ WRONG - PowerShell variable expansion issue
+docker run -v ${env:USERPROFILE}\.aws:/root/.aws:ro fileuploaderapi:latest
+
+# ✅ CORRECT - Use explicit path with quotes
+docker run -v "C:\Users\radkr\.aws:/root/.aws:ro" fileuploaderapi:latest
+
+# ✅ CORRECT - Forward slash format
+docker run -v "C:/Users/radkr/.aws:/root/.aws:ro" fileuploaderapi:latest
+```
+
+#### **AWS Credentials Error**
+```
+Error: Failed to resolve AWS credentials
+```
+**Fix:** Use the recommended credential passing method
+```bash
+# ✅ WORKING METHOD
+docker run -p 8080:8080 -e ASPNETCORE_ENVIRONMENT=Development \
+  -e AWS_ACCESS_KEY_ID=$(aws configure get aws_access_key_id) \
+  -e AWS_SECRET_ACCESS_KEY=$(aws configure get aws_secret_access_key) \
+  -e AWS_DEFAULT_REGION=us-east-2 fileuploaderapi:latest
+```
+
+#### **Port Already in Use Error**
+```
+Error: bind: address already in use
+```
+**Fix:** Stop existing containers and use different port
+```bash
+# Stop all containers
+docker ps -q | ForEach-Object { docker stop $_ }
+
+# Or use different port
+docker run -p 8081:8080 ... fileuploaderapi:latest
+
+### 📋 Configuration Matrix Reference
+
+| Environment | Auto Table Name | Override Example |
+|------------|-----------------|------------------|
+| **Development** | `FileUploads-Dev` | `-e DYNAMODB__TABLENAME=FileUploads-MyDev` |
+| **Production** | `FileUploads` | `-e DYNAMODB__TABLENAME=FileUploads-Prod` |
+| **Staging** | `FileUploads` (fallback) | `-e DYNAMODB__TABLENAME=FileUploads-Stage` |
+| **Custom** | Any | `-e DYNAMODB__TABLENAME=YourCustomTable` |

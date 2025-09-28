@@ -74,6 +74,9 @@ dotnet publish -c Release -r win-x64 --self-contained true -o ./publish
 # Add AWS S3 SDK
 dotnet add package AWSSDK.S3
 
+# Add AWS DynamoDB SDK
+dotnet add package AWSSDK.DynamoDBv2
+
 # Add Swagger/OpenAPI support
 dotnet add FileUploaderApi package Swashbuckle.AspNetCore
 ```
@@ -100,6 +103,7 @@ http://localhost:8080/swagger
 
 ### Manual API Testing
 
+#### S3 Endpoints
 ```bash
 # Upload file (multipart to API)
 curl -F "file=@./somefile.pdf" http://localhost:8080/api/fileupload/upload
@@ -116,6 +120,71 @@ curl -X POST http://localhost:8080/api/fileupload/upload-url \
 curl -X PUT "<returned url>" --data-binary @./test.bin -H "Content-Type: application/octet-stream"
 ```
 
+#### DynamoDB Endpoints
+```bash
+# Test DynamoDB health
+curl http://localhost:8080/api/DynamoFile/health
+
+# Upload file to DynamoDB
+curl -F "file=@./somefile.pdf" \
+  -F "uploadedBy=testuser" \
+  http://localhost:8080/api/DynamoFile/upload
+
+# List files in DynamoDB
+curl http://localhost:8080/api/DynamoFile
+
+# Download file from DynamoDB by ID
+curl -o downloaded_file.pdf http://localhost:8080/api/DynamoFile/download/[FILE_ID]
+
+# Delete file from DynamoDB
+curl -X DELETE http://localhost:8080/api/DynamoFile/[FILE_ID]
+```
+
+---
+
+## Configuration Management
+
+### Environment-Specific Table Names
+
+#### Production (appsettings.json):
+```json
+{
+  "DynamoDB": {
+    "TableName": "FileUploads",
+    "Region": "us-east-2"
+  }
+}
+```
+
+#### Development (appsettings.Development.json):
+```json
+{
+  "DynamoDB": {
+    "TableName": "FileUploads-Dev", 
+    "Region": "us-east-2"
+  }
+}
+```
+
+### Environment Variable Override
+```bash
+# Override table name via environment variable
+set DYNAMODB__TABLENAME=FileUploads-Test
+
+# Or in Docker
+docker run -p 8080:8080 -e DYNAMODB__TABLENAME=FileUploads-Custom fileuploaderapi:latest
+```
+
+### Terraform Configuration
+```bash
+# Deploy with custom table name
+terraform apply -var="dynamodb_table_name=FileUploads-MyApp"
+
+# Use terraform.tfvars file
+echo 'dynamodb_table_name = "FileUploads-Production"' >> terraform.tfvars
+terraform apply
+```
+
 ---
 
 ## Docker Commands
@@ -126,12 +195,22 @@ curl -X PUT "<returned url>" --data-binary @./test.bin -H "Content-Type: applica
 # Build Docker image
 docker build -t fileuploaderapi .
 
-# Run container locally
-docker run -p 8080:8080 -e ASPNETCORE_ENVIRONMENT=Development fileuploaderapi
+# Run container locally with AWS credentials for DynamoDB
+docker run -p 8080:8080 -e ASPNETCORE_ENVIRONMENT=Development \
+  -e AWS_ACCESS_KEY_ID=$(aws configure get aws_access_key_id) \
+  -e AWS_SECRET_ACCESS_KEY=$(aws configure get aws_secret_access_key) \
+  -e AWS_DEFAULT_REGION=us-east-2 \
+  -e DYNAMODB__TABLENAME=FileUploads-Dev \
+  fileuploaderapi:latest
 
 # OR from the solution root (where Dockerfile is)
 docker build -t fileuploaderapi:latest .
-docker run -p 8080:8080 fileuploaderapi:latest
+docker run -p 8080:8080 \
+  -e ASPNETCORE_ENVIRONMENT=Development \
+  -e AWS_ACCESS_KEY_ID=$(aws configure get aws_access_key_id) \
+  -e AWS_SECRET_ACCESS_KEY=$(aws configure get aws_secret_access_key) \
+  -e AWS_DEFAULT_REGION=us-east-2 \
+  fileuploaderapi:latest
 ```
 
 ### Optimized Docker Commands (After .dockerignore fix)
@@ -194,6 +273,67 @@ git branch -u origin/main
 
 # If you ever need to force overwrite remote with your local (use with caution!)
 git push --force-with-lease origin main
+```
+
+---
+
+## DynamoDB Deployment
+
+### Deploy DynamoDB Infrastructure
+
+```bash
+# Navigate to Infrastructure folder
+cd "C:\Users\radkr\OneDrive\Documents\Projects\S3FileUploader\Infrastructure"
+
+# Initialize Terraform
+terraform init
+
+# Preview changes
+terraform plan
+
+# Deploy DynamoDB table and related resources
+terraform apply -auto-approve
+
+# Check deployment outputs
+terraform output
+```
+
+### DynamoDB Table Verification
+
+```bash
+# Check table exists
+aws dynamodb describe-table --table-name FileUploads --region us-east-2
+
+# List all tables
+aws dynamodb list-tables --region us-east-2
+
+# Test table access
+aws dynamodb scan --table-name FileUploads --limit 1 --region us-east-2
+```
+
+### DynamoDB Configuration Options
+
+#### Different Table Names by Environment
+```bash
+# Development
+terraform apply -var="dynamodb_table_name=FileUploads-Dev"
+
+# Staging
+terraform apply -var="dynamodb_table_name=FileUploads-Stage"
+
+# Production
+terraform apply -var="dynamodb_table_name=FileUploads"
+```
+
+#### Billing Mode Options
+```bash
+# Provisioned billing (predictable costs)
+terraform apply -var="dynamodb_billing_mode=PROVISIONED" \
+  -var="dynamodb_read_capacity=10" \
+  -var="dynamodb_write_capacity=10"
+
+# On-demand billing (pay per request)
+terraform apply -var="dynamodb_billing_mode=PAY_PER_REQUEST"
 ```
 
 ---
@@ -460,15 +600,37 @@ curl "http://file-uploader-api-1896670076.us-east-2.elb.amazonaws.com/api/fileup
 3. **Target Group Dependencies**: Manual AWS CLI operations to resolve conflicts
 4. **Security Group Configuration**: Separated ALB and ECS security groups
 5. **Docker Build Context**: Optimized with .dockerignore (532MB → 846B)
+6. **Security Vulnerabilities**: Fixed file name injection attacks and added validation
+7. **Error Information Disclosure**: Improved error handling to not expose sensitive data
+
+### Security Improvements Made
+
+- **File Name Sanitization**: Prevents path traversal attacks
+- **File Size Validation**: 500MB upload limit with proper error handling
+- **Content Type Validation**: Whitelist of allowed MIME types
+- **URL Decoding**: Proper handling of special characters in S3 keys
+- **Error Message Security**: Generic error messages to prevent information disclosure
+- **Request Size Limits**: Added `[RequestSizeLimit]` and `[RequestFormLimits]` attributes
+
+### Code Quality Enhancements
+
+- **Health Check Endpoint**: Added `/api/fileupload/health` for monitoring
+- **Response DTOs**: Structured response objects (`UploadResponse`, `DownloadUrlResponse`)
+- **Cancellation Token Support**: Proper async operation cancellation
+- **Enhanced Metadata**: Rich S3 object metadata with upload details
+- **Comprehensive Logging**: Structured logging with security context
 
 ### Production Recommendations
 
 - Add HTTPS with SSL certificate
-- Implement proper authentication
+- Implement proper authentication and authorization
 - Set up auto-scaling policies
-- Add comprehensive monitoring
+- Add comprehensive monitoring and alerting
 - Follow security best practices
 - Implement CI/CD pipeline
+- Add request rate limiting
+- Implement virus scanning for uploaded files
+- Add database logging for audit trails
 
 ---
 

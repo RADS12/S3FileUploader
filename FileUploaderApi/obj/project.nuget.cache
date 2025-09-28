@@ -1,10 +1,11 @@
 {
   "version": 2,
-  "dgSpecHash": "1efck7SIAJk=",
+  "dgSpecHash": "EOFNMPpeM5A=",
   "success": true,
   "projectFilePath": "C:\\Users\\radkr\\OneDrive\\Documents\\Projects\\S3FileUploader\\FileUploaderApi\\FileUploaderApi.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\radkr\\.nuget\\packages\\awssdk.core\\4.0.0.29\\awssdk.core.4.0.0.29.nupkg.sha512",
+    "C:\\Users\\radkr\\.nuget\\packages\\awssdk.dynamodbv2\\4.0.6.3\\awssdk.dynamodbv2.4.0.6.3.nupkg.sha512",
     "C:\\Users\\radkr\\.nuget\\packages\\awssdk.s3\\4.0.7.4\\awssdk.s3.4.0.7.4.nupkg.sha512",
     "C:\\Users\\radkr\\.nuget\\packages\\microsoft.aspnetcore.openapi\\9.0.8\\microsoft.aspnetcore.openapi.9.0.8.nupkg.sha512",
     "C:\\Users\\radkr\\.nuget\\packages\\microsoft.extensions.apidescription.server\\9.0.0\\microsoft.extensions.apidescription.server.9.0.0.nupkg.sha512",

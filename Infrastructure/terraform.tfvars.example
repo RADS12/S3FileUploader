@@ -1,0 +1,47 @@
+# Terraform Variables Configuration
+# Copy this file to terraform.tfvars and customize as needed
+
+##############
+# Basic Configuration
+##############
+region      = "us-east-2"
+bucket_name = "rad-s3-demo-first-1"
+repo_name   = "file-uploader-api"
+image_tag   = "dev"
+
+##############
+# DynamoDB Configuration
+##############
+dynamodb_table_name    = "FileUploads"
+dynamodb_billing_mode  = "PROVISIONED"  # or "PAY_PER_REQUEST"
+
+# Provisioned capacity (only used with PROVISIONED billing mode)
+dynamodb_read_capacity      = 5
+dynamodb_write_capacity     = 5
+dynamodb_gsi_read_capacity  = 2
+dynamodb_gsi_write_capacity = 2
+
+# Security and backup settings
+dynamodb_point_in_time_recovery = true
+dynamodb_deletion_protection    = true
+dynamodb_kms_key_id            = ""  # Leave empty for AWS managed key
+
+# TTL for automatic cleanup (optional)
+dynamodb_ttl_enabled   = false
+dynamodb_ttl_attribute = "ExpiresAt"
+
+# Monitoring and policies
+enable_dynamodb_monitoring       = true
+enable_dynamodb_resource_policy  = false
+sns_topic_arn                    = ""  # Add SNS topic ARN for alerts
+
+##############
+# Tags
+##############
+tags = {
+  Project     = "file-uploader-api"
+  Owner       = "rad"
+  Environment = "dev"
+  Service     = "FileUploader"
+  ManagedBy   = "Terraform"
+}

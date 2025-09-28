@@ -1,7 +1,10 @@
 using Amazon;
 using Amazon.S3;
+using Amazon.DynamoDBv2;
+using Amazon.DynamoDBv2.DataModel;
 using Microsoft.OpenApi.Models;
 using Microsoft.AspNetCore.Http.Features;
+using FileUploaderApi.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,9 +27,21 @@ builder.Services.AddCors(o => o.AddDefaultPolicy(p =>
 
 var awsRegion = builder.Configuration["AWS:Region"] ?? "us-east-2";
 
-// AWS SDK client (uses IAM role in AWS; local uses ~/.aws/credentials)
+// AWS SDK clients (uses IAM role in AWS; local uses ~/.aws/credentials)
 builder.Services.AddSingleton<IAmazonS3>(_ =>
     new AmazonS3Client(RegionEndpoint.GetBySystemName(awsRegion)));
+
+// DynamoDB services
+builder.Services.AddSingleton<IAmazonDynamoDB>(_ =>
+    new AmazonDynamoDBClient(RegionEndpoint.GetBySystemName(awsRegion)));
+
+builder.Services.AddSingleton<IDynamoDBContext>(provider =>
+{
+    var dynamoDbClient = provider.GetRequiredService<IAmazonDynamoDB>();
+    return new DynamoDBContextBuilder().WithDynamoDBClient(() => dynamoDbClient).Build();
+});
+
+builder.Services.AddScoped<IDynamoFileService, DynamoFileService>();
 
 // File upload size limit (optional, default is 128 MB)
 builder.Services.Configure<FormOptions>(o =>
@@ -46,7 +61,7 @@ app.UseSwaggerUI();
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
-   
+
 }
 
 //app.UseHttpsRedirection();

@@ -24,5 +24,6 @@
     <PkgMicrosoft_Extensions_ApiDescription_Server Condition=" '$(PkgMicrosoft_Extensions_ApiDescription_Server)' == '' ">C:\Users\radkr\.nuget\packages\microsoft.extensions.apidescription.server\9.0.0</PkgMicrosoft_Extensions_ApiDescription_Server>
     <PkgAWSSDK_Core Condition=" '$(PkgAWSSDK_Core)' == '' ">C:\Users\radkr\.nuget\packages\awssdk.core\4.0.0.29</PkgAWSSDK_Core>
     <PkgAWSSDK_S3 Condition=" '$(PkgAWSSDK_S3)' == '' ">C:\Users\radkr\.nuget\packages\awssdk.s3\4.0.7.4</PkgAWSSDK_S3>
+    <PkgAWSSDK_DynamoDBv2 Condition=" '$(PkgAWSSDK_DynamoDBv2)' == '' ">C:\Users\radkr\.nuget\packages\awssdk.dynamodbv2\4.0.6.3</PkgAWSSDK_DynamoDBv2>
   </PropertyGroup>
 </Project>

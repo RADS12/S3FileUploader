@@ -73,3 +73,4 @@ C:\Users\radkr\OneDrive\Documents\Projects\S3FileUploader\FileUploaderApi\obj\De
 C:\Users\radkr\OneDrive\Documents\Projects\S3FileUploader\FileUploaderApi\obj\Debug\net9.0\FileUploaderApi.pdb
 C:\Users\radkr\OneDrive\Documents\Projects\S3FileUploader\FileUploaderApi\obj\Debug\net9.0\FileUploaderApi.genruntimeconfig.cache
 C:\Users\radkr\OneDrive\Documents\Projects\S3FileUploader\FileUploaderApi\obj\Debug\net9.0\ref\FileUploaderApi.dll
+C:\Users\radkr\OneDrive\Documents\Projects\S3FileUploader\FileUploaderApi\bin\Debug\net9.0\AWSSDK.DynamoDBv2.dll

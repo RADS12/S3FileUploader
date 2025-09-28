@@ -235,28 +235,71 @@ public class FileUploadController : ControllerBase
         }
     }
 
-    // POST api/fileupload/upload-url  (client can PUT directly to S3)
-    //[HttpPost("upload-url")]
-    // public IActionResult GetUploadUrl([FromBody] PresignUploadRequest body)
-    // {
-    //     var key = string.IsNullOrWhiteSpace(body.DesiredKey)
-    //         ? $"{Guid.NewGuid():N}"
-    //         : body.DesiredKey;
+    // POST api/fileupload/upload-url (client can PUT directly to S3)
+    [HttpPost("upload-url")]
+    public IActionResult GetUploadUrl([FromBody] PresignUploadRequest body, CancellationToken cancellationToken = default)
+    {
+        _logger.LogInformation("Upload URL request received for key: {DesiredKey}, expiration minutes: {Minutes}",
+            body.DesiredKey, body.Minutes);
 
-    //     var url = _s3.GetPreSignedURL(new GetPreSignedUrlRequest
-    //     {
-    //         BucketName = _bucket,
-    //         Key = key,
-    //         Expires = DateTime.UtcNow.AddMinutes(Math.Clamp(body.Minutes, 1, 60)),
-    //         Verb = HttpVerb.PUT
-    //     });
+        try
+        {
+            // Validate the request
+            if (body.Minutes < 1 || body.Minutes > 60)
+            {
+                _logger.LogWarning("Upload URL request rejected: Invalid expiration minutes - {Minutes}", body.Minutes);
+                return BadRequest("Expiration minutes must be between 1 and 60.");
+            }
 
-    //     return Ok(new { key, url, expiresInMinutes = Math.Clamp(body.Minutes, 1, 60) });
-    // }
+            // Generate a secure key
+            var key = string.IsNullOrWhiteSpace(body.DesiredKey)
+                ? $"uploads/{DateTime.UtcNow:yyyy/MM/dd}/{Guid.NewGuid():N}"
+                : SanitizeFileName(body.DesiredKey);
 
-    //public record PresignUploadRequest(string? DesiredKey, int Minutes = 15);
+            var clampedMinutes = Math.Clamp(body.Minutes, 1, 60);
+            var expiresAt = DateTime.UtcNow.AddMinutes(clampedMinutes);
+
+            var url = _s3.GetPreSignedURL(new GetPreSignedUrlRequest
+            {
+                BucketName = _bucket,
+                Key = key,
+                Expires = expiresAt,
+                Verb = HttpVerb.PUT,
+                ContentType = body.ContentType ?? "application/octet-stream"
+            });
+
+            _logger.LogInformation("Upload URL generated successfully for key: {Key}, expires in {Minutes} minutes",
+                key, clampedMinutes);
+
+            return Ok(new UploadUrlResponse(key, url, clampedMinutes, expiresAt));
+        }
+        catch (AmazonS3Exception ex)
+        {
+            _logger.LogError(ex, "AWS S3 error generating upload URL - ErrorCode: {ErrorCode}, StatusCode: {StatusCode}",
+                ex.ErrorCode, ex.StatusCode);
+            return StatusCode(500, "Failed to generate upload URL. Please try again later.");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error generating upload URL");
+            return StatusCode(500, "An unexpected error occurred while generating upload URL.");
+        }
+    }
+
+    /// <summary>
+    /// Request model for generating presigned upload URLs
+    /// </summary>
+    /// <param name="DesiredKey">Optional desired S3 key. If not provided, a unique key will be generated.</param>
+    /// <param name="Minutes">URL expiration time in minutes (1-60). Default is 15.</param>
+    /// <param name="ContentType">Optional content type for the upload. Default is application/octet-stream.</param>
+    public record PresignUploadRequest(
+        string? DesiredKey = null,
+        int Minutes = 15,
+        string? ContentType = null
+    );
 }
 
 // Response DTOs
 public record UploadResponse(string Bucket, string Key, long FileSize, string ContentType, DateTime UploadedAt);
 public record DownloadUrlResponse(string Url, int ExpiresInMinutes, DateTime ExpiresAt);
+public record UploadUrlResponse(string Key, string Url, int ExpiresInMinutes, DateTime ExpiresAt);

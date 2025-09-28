@@ -30,3 +30,31 @@ output "load_balancer_dns" {
   value       = aws_lb.api.dns_name
   description = "Application Load Balancer DNS name"
 }
+
+##############
+# DynamoDB Outputs
+##############
+output "dynamodb_table_name" {
+  value       = aws_dynamodb_table.file_uploads.name
+  description = "DynamoDB table name for file uploads"
+}
+
+output "dynamodb_table_arn" {
+  value       = aws_dynamodb_table.file_uploads.arn
+  description = "DynamoDB table ARN"
+}
+
+output "dynamodb_gsi_names" {
+  value       = [for gsi in aws_dynamodb_table.file_uploads.global_secondary_index : gsi.name]
+  description = "List of Global Secondary Index names"
+}
+
+output "dynamodb_billing_mode" {
+  value       = aws_dynamodb_table.file_uploads.billing_mode
+  description = "DynamoDB billing mode"
+}
+
+output "dynamodb_region" {
+  value       = var.region
+  description = "AWS region where DynamoDB table is deployed"
+}

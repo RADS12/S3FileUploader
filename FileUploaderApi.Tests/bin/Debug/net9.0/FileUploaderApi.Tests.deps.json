@@ -26,6 +26,17 @@
           }
         }
       },
+      "AWSSDK.DynamoDBv2/4.0.6.3": {
+        "dependencies": {
+          "AWSSDK.Core": "4.0.0.29"
+        },
+        "runtime": {
+          "lib/net8.0/AWSSDK.DynamoDBv2.dll": {
+            "assemblyVersion": "4.0.0.0",
+            "fileVersion": "4.0.6.3"
+          }
+        }
+      },
       "AWSSDK.S3/4.0.7.4": {
         "dependencies": {
           "AWSSDK.Core": "4.0.0.29"
@@ -420,6 +431,7 @@
       "xunit.runner.visualstudio/2.8.2": {},
       "FileUploaderApi/1.0.0": {
         "dependencies": {
+          "AWSSDK.DynamoDBv2": "4.0.6.3",
           "AWSSDK.S3": "4.0.7.4",
           "Microsoft.AspNetCore.OpenApi": "9.0.8",
           "Swashbuckle.AspNetCore": "9.0.4"
@@ -445,6 +457,13 @@
       "sha512": "sha512-iouNjeQmTRbBoP6sRM1X4dAIUmSgm6v5Q2UcQg/lHA7DwNRvf6PFN8QbaMrrPbRJXe1eCSzjodmGZFUmHGx5Tg==",
       "path": "awssdk.core/4.0.0.29",
       "hashPath": "awssdk.core.4.0.0.29.nupkg.sha512"
+    },
+    "AWSSDK.DynamoDBv2/4.0.6.3": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-w/D5Ze94bCDKIMk47KqZaa1PJN5f7h/5LAjhW2hqXFjgP/Jyau2u6q+hq4pZaWMxk4PAdICKXyApgBqV3XyhHA==",
+      "path": "awssdk.dynamodbv2/4.0.6.3",
+      "hashPath": "awssdk.dynamodbv2.4.0.6.3.nupkg.sha512"
     },
     "AWSSDK.S3/4.0.7.4": {
       "type": "package",

@@ -229,3 +229,4 @@ C:\Users\radkr\OneDrive\Documents\Projects\S3FileUploader\FileUploaderApi.Tests\
 C:\Users\radkr\OneDrive\Documents\Projects\S3FileUploader\FileUploaderApi.Tests\obj\Debug\net9.0\FileUploaderApi.Tests.pdb
 C:\Users\radkr\OneDrive\Documents\Projects\S3FileUploader\FileUploaderApi.Tests\obj\Debug\net9.0\FileUploaderApi.Tests.genruntimeconfig.cache
 C:\Users\radkr\OneDrive\Documents\Projects\S3FileUploader\FileUploaderApi.Tests\obj\Debug\net9.0\ref\FileUploaderApi.Tests.dll
+C:\Users\radkr\OneDrive\Documents\Projects\S3FileUploader\FileUploaderApi.Tests\bin\Debug\net9.0\AWSSDK.DynamoDBv2.dll

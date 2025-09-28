@@ -53,6 +53,10 @@ resource "aws_ecs_task_definition" "api" {
           value = data.aws_s3_bucket.uploads.bucket
         },
         {
+          name  = "DYNAMODB_TABLE_NAME"
+          value = aws_dynamodb_table.file_uploads.name
+        },
+        {
           name  = "ASPNETCORE_URLS"
           value = "http://+:8080"
         }
