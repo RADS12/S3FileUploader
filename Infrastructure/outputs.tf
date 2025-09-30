@@ -58,3 +58,41 @@ output "dynamodb_region" {
   value       = var.region
   description = "AWS region where DynamoDB table is deployed"
 }
+
+##############
+# Glue Outputs
+##############
+output "glue_database_name" {
+  description = "Name of the Glue catalog database"
+  value       = var.enable_glue_integration ? aws_glue_catalog_database.file_processing_db.name : null
+}
+
+output "glue_crawler_name" {
+  description = "Name of the Glue crawler"
+  value       = var.enable_glue_integration ? aws_glue_crawler.raw_files_crawler[0].name : null
+}
+
+output "glue_processed_data_bucket" {
+  description = "S3 bucket for processed data"
+  value       = aws_s3_bucket.processed_data.bucket
+}
+
+output "glue_scripts_bucket" {
+  description = "S3 bucket for Glue scripts"
+  value       = aws_s3_bucket.glue_scripts.bucket
+}
+
+output "glue_service_role_arn" {
+  description = "ARN of the Glue service role"
+  value       = aws_iam_role.glue_service_role.arn
+}
+
+output "glue_csv_job_name" {
+  description = "Name of the CSV processing Glue job"
+  value       = var.enable_glue_csv_processing ? aws_glue_job.csv_processor[0].name : null
+}
+
+output "glue_json_job_name" {
+  description = "Name of the JSON processing Glue job"
+  value       = var.enable_glue_json_processing ? aws_glue_job.json_processor[0].name : null
+}

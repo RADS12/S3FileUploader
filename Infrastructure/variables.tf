@@ -137,3 +137,59 @@ variable "sns_topic_arn" {
   description = "SNS topic ARN for CloudWatch alarm notifications"
   default     = ""
 }
+
+##############
+# Glue Variables
+##############
+variable "enable_glue_integration" {
+  type        = bool
+  description = "Enable AWS Glue integration for file processing"
+  default     = true
+}
+
+variable "glue_version" {
+  type        = string
+  description = "AWS Glue version to use"
+  default     = "4.0"
+}
+
+variable "glue_crawler_schedule" {
+  type        = string
+  description = "Cron expression for Glue crawler schedule"
+  default     = "cron(0 12 * * ? *)"  # Daily at noon
+}
+
+variable "enable_glue_csv_processing" {
+  type        = bool
+  description = "Enable CSV processing Glue job"
+  default     = true
+}
+
+variable "enable_glue_json_processing" {
+  type        = bool
+  description = "Enable JSON processing Glue job"
+  default     = false
+}
+
+variable "glue_max_concurrent_runs" {
+  type        = number
+  description = "Maximum concurrent runs for Glue jobs"
+  default     = 3
+}
+
+variable "glue_worker_type" {
+  type        = string
+  description = "Glue worker type (G.1X, G.2X, G.025X)"
+  default     = "G.1X"
+  
+  validation {
+    condition     = contains(["G.1X", "G.2X", "G.025X"], var.glue_worker_type)
+    error_message = "Worker type must be G.1X, G.2X, or G.025X."
+  }
+}
+
+variable "glue_number_of_workers" {
+  type        = number
+  description = "Number of Glue workers"
+  default     = 2
+}

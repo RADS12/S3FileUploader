@@ -110,6 +110,7 @@ public class FileUploadController : ControllerBase
             return StatusCode(500, new { status = "unhealthy", timestamp = DateTime.UtcNow });
         }
     }
+
     // POST api/fileupload/upload
     [HttpPost("upload")]
     [Consumes("multipart/form-data")]
@@ -139,7 +140,10 @@ public class FileUploadController : ControllerBase
                 : $"{req.KeyPrefix.TrimEnd('/')}/{sanitizedFileName}";
 
             _logger.LogInformation("Starting upload - OriginalFileName: {OriginalFileName}, SanitizedFileName: {SanitizedFileName}, Key: {Key}, Size: {FileSize} bytes, ContentType: {ContentType}",
-                req.File.FileName, sanitizedFileName, key, req.File.Length, req.File.ContentType); await using var stream = req.File.OpenReadStream();
+                req.File.FileName, sanitizedFileName, key, req.File.Length, req.File.ContentType);
+
+            await using var stream = req.File.OpenReadStream();
+
             var put = new PutObjectRequest
             {
                 BucketName = _bucket,
