@@ -1,0 +1,21 @@
+OrderID,CustomerID,ProductName,Category,Quantity,UnitPrice,OrderDate,ShipDate,Country,SalesAmount
+1001,CUST001,Wireless Headphones,Electronics,2,89.99,2025-09-01,2025-09-03,USA,179.98
+1002,CUST002,Coffee Maker,Appliances,1,149.99,2025-09-01,2025-09-04,Canada,149.99
+1003,CUST003,Running Shoes,Sports,1,129.99,2025-09-02,2025-09-05,UK,129.99
+1004,CUST001,Bluetooth Speaker,Electronics,3,39.99,2025-09-02,2025-09-06,USA,119.97
+1005,CUST004,Yoga Mat,Sports,2,29.99,2025-09-03,2025-09-07,Germany,59.98
+1006,CUST005,Kitchen Scale,Appliances,1,24.99,2025-09-03,2025-09-08,France,24.99
+1007,CUST002,Smartphone Case,Electronics,4,19.99,2025-09-04,2025-09-09,Canada,79.96
+1008,CUST006,Protein Powder,Health,1,89.99,2025-09-04,2025-09-10,Australia,89.99
+1009,CUST007,Desk Lamp,Home,2,45.99,2025-09-05,2025-09-11,USA,91.98
+1010,CUST003,Water Bottle,Sports,3,15.99,2025-09-05,2025-09-12,UK,47.97
+1011,CUST008,Laptop Stand,Electronics,1,79.99,2025-09-06,2025-09-13,Netherlands,79.99
+1012,CUST009,Air Fryer,Appliances,1,199.99,2025-09-06,2025-09-14,Spain,199.99
+1013,CUST010,Gaming Mouse,Electronics,2,49.99,2025-09-07,2025-09-15,Italy,99.98
+1014,CUST004,Resistance Bands,Sports,5,12.99,2025-09-07,2025-09-16,Germany,64.95
+1015,CUST011,Essential Oils,Health,1,34.99,2025-09-08,2025-09-17,Belgium,34.99
+1016,CUST012,Throw Pillow,Home,4,22.99,2025-09-08,2025-09-18,Sweden,91.96
+1017,CUST005,Wireless Charger,Electronics,2,24.99,2025-09-09,2025-09-19,France,49.98
+1018,CUST013,Blender,Appliances,1,89.99,2025-09-09,2025-09-20,Norway,89.99
+1019,CUST014,Hiking Boots,Sports,1,159.99,2025-09-10,2025-09-21,Switzerland,159.99
+1020,CUST015,Vitamins,Health,2,19.99,2025-09-10,2025-09-22,Austria,39.98

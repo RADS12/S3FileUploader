@@ -68,8 +68,13 @@ resource "aws_glue_crawler" "raw_files_crawler" {
   name          = "${var.tags.Project}-raw-files-crawler"
   role          = aws_iam_role.glue_service_role.arn
   
+  # Scan both uploads folder and ForGlue folder
   s3_target {
     path = "s3://${data.aws_s3_bucket.uploads.bucket}/uploads/"
+  }
+  
+  s3_target {
+    path = "s3://${data.aws_s3_bucket.uploads.bucket}/ForGlue/"
   }
   
   configuration = jsonencode({
@@ -150,18 +155,5 @@ resource "aws_glue_job" "json_processor" {
   tags = var.tags
 }
 
-# Data sources for existing resources
-data "aws_availability_zones" "available" {
-  state = "available"
-}
-
-data "aws_vpc" "default" {
-  default = true
-}
-
-data "aws_subnets" "default" {
-  filter {
-    name   = "vpc-id"
-    values = [data.aws_vpc.default.id]
-  }
-}
+# Note: Data sources for VPC and subnets are already defined in ecs-fargate.tf
+# We'll reuse those existing data sources if needed for Glue VPC connections

@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("FileUploaderApi")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+b9bbcf7aeeb1f5a1aafb66afff788d3f12e035e7")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+8243bcbf12b3767e6e433e1e40cae3172d6b4a57")]
 [assembly: System.Reflection.AssemblyProductAttribute("FileUploaderApi")]
 [assembly: System.Reflection.AssemblyTitleAttribute("FileUploaderApi")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

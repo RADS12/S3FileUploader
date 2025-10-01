@@ -24,7 +24,8 @@ public class FileUploadController : ControllerBase
         "application/pdf", "text/plain", "application/json",
         "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         "application/vnd.ms-excel", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        "application/zip", "application/x-zip-compressed"
+        "application/zip", "application/x-zip-compressed",
+        "text/csv", "application/csv"  // CSV files for Glue ETL testing
     };
 
     public FileUploadController(IAmazonS3 s3, IConfiguration cfg, ILogger<FileUploadController> logger)
